@@ -1,32 +1,33 @@
 // Blessings from Gods shop pool (SS14 Tartarus).
-// Source: https://tlidb.com/en/Blessings_from_Gods (beta data, may differ from live).
-// `name: null` rows are listed on TLIDB without a name.
+// Sources: https://tlidb.com/en/Blessings_from_Gods (beta data) and the
+// Torchcodex calculator's game data (https://legacy.torchcodex.com/latest/en/blessingsFromGods.html).
+// Prices are in Flame Elementium (FE), the Trade House currency.
 
-export type ShopItem = {
+export type Item = {
   id: string
-  name: string | null
-  quantity: number | null
-  weight: number
+  name: string
+  // Offer sizes the shop can show for this item.
+  quantities: number[]
 }
 
 export const REFRESH_COST_STONES = 50
 export const TRADE_HOUSE_TAX = 0.125
+export const DEFAULT_PROFIT_MARGIN = 20
 
-export const shopItems: ShopItem[] = [
-  { id: 'unknown-1', name: null, quantity: null, weight: 298116 },
-  { id: 'flame-sand-20', name: 'Flame Sand', quantity: 20, weight: 20000000 },
-  { id: 'flame-sand-60', name: 'Flame Sand', quantity: 60, weight: 6666667 },
-  { id: 'unknown-2', name: null, quantity: null, weight: 8923077 },
-  { id: 'flame-elementium-5', name: 'Flame Elementium', quantity: 5, weight: 1784615 },
-  { id: 'flame-elementium-10', name: 'Flame Elementium', quantity: 10, weight: 892308 },
-  { id: 'energy-cores-10', name: 'Energy Cores', quantity: 10, weight: 10000000 },
-  { id: 'energy-cores-20', name: 'Energy Cores', quantity: 20, weight: 5000000 },
-  { id: 'netherrealm-resonance-10', name: 'Netherrealm Resonance', quantity: 10, weight: 10000000 },
-  { id: 'netherrealm-resonance-20', name: 'Netherrealm Resonance', quantity: 20, weight: 5000000 },
-  { id: 'netherrealm-resonance-100', name: 'Netherrealm Resonance', quantity: 100, weight: 1000000 },
-  { id: 'wedge-magic-20', name: 'Transcendence Wedge (Magic)', quantity: 20, weight: 20000000 },
-  { id: 'wedge-rare-20', name: 'Transcendence Wedge (Rare)', quantity: 20, weight: 2000000 },
-  { id: 'unknown-3', name: null, quantity: null, weight: 400000 },
-  { id: 'unknown-4', name: null, quantity: null, weight: 100 },
-  { id: 'unknown-5', name: null, quantity: null, weight: 100 },
+export const DIVINITY_STONE_ID = 'divinity-stone'
+// Flame Elementium is the currency itself: always worth 1 FE, never sold, never taxed.
+export const FLAME_ELEMENTIUM_ID = 'flame-elementium'
+
+export const items: Item[] = [
+  { id: FLAME_ELEMENTIUM_ID, name: 'Flame Elementium', quantities: [1, 5, 10] },
+  { id: 'flame-sand', name: 'Flame Sand', quantities: [20, 60] },
+  { id: 'divinity-fragment', name: 'Divinity Fragment', quantities: [200, 600] },
+  { id: 'energy-cores', name: 'Energy Cores', quantities: [10, 20] },
+  { id: 'netherrealm-resonance', name: 'Netherrealm Resonance', quantities: [10, 20, 100] },
+  { id: 'wedge-magic', name: 'Transcendence Wedge (Magic)', quantities: [10, 20] },
+  { id: 'wedge-rare', name: 'Transcendence Wedge (Rare)', quantities: [10, 20] },
+  { id: 'wedge-legendary', name: 'Transcendence Wedge (Legendary)', quantities: [1] },
+  { id: 'wedge-new-god', name: 'Transcendence Wedge (New God)', quantities: [1] },
+  { id: 'truth-ember', name: 'Truth Ember', quantities: [10] },
+  { id: 'ultimate-ember', name: 'Ultimate Ember', quantities: [1] },
 ]

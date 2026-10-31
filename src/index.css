@@ -1,9 +1,11 @@
 :root {
   --bg: #14110f;
+  --surface: #1e1a16;
   --text: #e8e2d6;
   --muted: #9a917f;
   --accent: #d9a441;
   --border: #3a322a;
+  --skip: #c46a5a;
 
   font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
@@ -22,7 +24,54 @@ main {
 }
 
 h1 {
+  margin-bottom: 8px;
   color: var(--accent);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: end;
+  margin: 24px 0;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.settings label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings .note {
+  margin: 0;
+  font-size: 14px;
+}
+
+.hint {
+  color: var(--accent);
+}
+
+input {
+  width: 120px;
+  padding: 6px 8px;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
 }
 
 table {
@@ -33,10 +82,38 @@ table {
 th,
 td {
   padding: 8px;
-  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 th {
   color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+tr.item-start td {
+  border-top: 1px solid var(--border);
+}
+
+.item-name {
+  font-weight: 600;
+}
+
+.result strong {
+  color: var(--accent);
+}
+
+.skip {
+  color: var(--skip);
+}
+
+@media (max-width: 640px) {
+  th,
+  td {
+    padding: 6px 4px;
+    font-size: 14px;
+  }
+
+  td input {
+    width: 72px;
+  }
 }
