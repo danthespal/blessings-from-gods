@@ -10,10 +10,12 @@ import {
 
 const STORAGE_KEY = 'bfg-calculator'
 
-type Saved = { prices: Record<string, string>; margin: string }
+type StoneSource = 'bought' | 'farmed'
+
+type Saved = { prices: Record<string, string>; margin: string; source: StoneSource }
 
 function loadSaved(): Saved {
-  const fallback = { prices: {}, margin: String(DEFAULT_PROFIT_MARGIN) }
+  const fallback: Saved = { prices: {}, margin: String(DEFAULT_PROFIT_MARGIN), source: 'bought' }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     return raw ? { ...fallback, ...JSON.parse(raw) } : fallback
@@ -41,16 +43,19 @@ function StoneLimit({ stones }: { stones: number | null }) {
 function App() {
   const [prices, setPrices] = useState<Record<string, string>>(() => loadSaved().prices)
   const [margin, setMargin] = useState(() => loadSaved().margin)
+  const [source, setSource] = useState<StoneSource>(() => loadSaved().source)
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ prices, margin }))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ prices, margin, source }))
     } catch {
       // Storage unavailable (private mode etc.): prices just won't persist.
     }
-  }, [prices, margin])
+  }, [prices, margin, source])
 
-  const stonePrice = parsePrice(prices[DIVINITY_STONE_ID])
+  const marketStonePrice = parsePrice(prices[DIVINITY_STONE_ID])
+  const stonePrice =
+    marketStonePrice !== null && source === 'farmed' ? farmedStonePrice(marketStonePrice) : marketStonePrice
   const marginValue = Number(margin.replace(',', '.'))
   const marginPercent = Number.isFinite(marginValue) ? Math.min(Math.max(marginValue, 0), 100) : 0
 
@@ -64,14 +69,24 @@ function App() {
           Enter current Trade House prices in Flame Elementium (FE). The table shows the most
           Divinity Stones worth paying for each shop offer.
         </p>
-        <p className="muted">
-          <strong>Bought</strong>: you buy your stones at the Trade House price.{' '}
-          <strong>Farmed</strong>: you farm your stones, so each one costs what selling it would
-          earn after tax.
-        </p>
       </header>
 
       <section className="settings">
+        <div className="field">
+          <span>Your stones are</span>
+          <div className="toggle" role="group" aria-label="Your stones are">
+            {(['bought', 'farmed'] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={source === option}
+                onClick={() => setSource(option)}
+              >
+                {option === 'bought' ? 'Bought' : 'Farmed'}
+              </button>
+            ))}
+          </div>
+        </div>
         <label>
           <span>Divinity Stone price (FE each)</span>
           <input
@@ -94,6 +109,9 @@ function App() {
           />
         </label>
         <p className="muted note">
+          {source === 'bought'
+            ? 'Each stone costs its Trade House price.'
+            : 'Each stone costs what selling it would earn after tax.'}{' '}
           Trade House tax ({TRADE_HOUSE_TAX * 100}%) is already deducted from item values.
         </p>
       </section>
@@ -110,8 +128,7 @@ function App() {
               <th>Price (FE each)</th>
               <th>Offer</th>
               <th>Sells for (FE)</th>
-              <th>Max stones (bought)</th>
-              <th>Max stones (farmed)</th>
+              <th>Max stones</th>
             </tr>
           </thead>
           <tbody>
@@ -121,11 +138,8 @@ function App() {
 
               return item.quantities.map((quantity, index) => {
                 const value = unitPrice === null ? null : offerValue(item.id, quantity, unitPrice)
-                const canCompute = value !== null && stonePrice !== null
-                const boughtStones = canCompute ? maxStoneCost(value, stonePrice, marginPercent) : null
-                const farmedStones = canCompute
-                  ? maxStoneCost(value, farmedStonePrice(stonePrice), marginPercent)
-                  : null
+                const stones =
+                  value === null || stonePrice === null ? null : maxStoneCost(value, stonePrice, marginPercent)
 
                 return (
                   <tr key={`${item.id}-${quantity}`} className={index === 0 ? 'item-start' : undefined}>
@@ -152,10 +166,7 @@ function App() {
                     <td>x{quantity}</td>
                     <td>{value === null ? '—' : formatFe(value)}</td>
                     <td className="result">
-                      <StoneLimit stones={boughtStones} />
-                    </td>
-                    <td className="result">
-                      <StoneLimit stones={farmedStones} />
+                      <StoneLimit stones={stones} />
                     </td>
                   </tr>
                 )
