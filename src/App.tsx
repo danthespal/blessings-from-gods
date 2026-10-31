@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { maxStoneCost, offerValue } from './calc'
+import { farmedStonePrice, maxStoneCost, offerValue } from './calc'
 import {
   DEFAULT_PROFIT_MARGIN,
   DIVINITY_STONE_ID,
@@ -32,6 +32,12 @@ function formatFe(value: number): string {
   return value.toLocaleString(undefined, { maximumFractionDigits: 3 })
 }
 
+function StoneLimit({ stones }: { stones: number | null }) {
+  if (stones === null) return <span className="muted">—</span>
+  if (stones < 1) return <span className="skip">Skip</span>
+  return <strong>{stones.toLocaleString()}</strong>
+}
+
 function App() {
   const [prices, setPrices] = useState<Record<string, string>>(() => loadSaved().prices)
   const [margin, setMargin] = useState(() => loadSaved().margin)
@@ -57,6 +63,11 @@ function App() {
         <p className="muted">
           Enter current Trade House prices in Flame Elementium (FE). The table shows the most
           Divinity Stones worth paying for each shop offer.
+        </p>
+        <p className="muted">
+          <strong>Bought</strong>: you buy your stones at the Trade House price.{' '}
+          <strong>Farmed</strong>: you farm your stones, so each one costs what selling it would
+          earn after tax.
         </p>
       </header>
 
@@ -91,65 +102,68 @@ function App() {
         <p className="hint">Enter the Divinity Stone price to see how many stones each offer is worth.</p>
       )}
 
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Price (FE each)</th>
-            <th>Offer</th>
-            <th>Sells for (FE)</th>
-            <th>Buy if it costs ≤</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => {
-            const isCurrency = item.id === FLAME_ELEMENTIUM_ID
-            const unitPrice = isCurrency ? 1 : parsePrice(prices[item.id])
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Price (FE each)</th>
+              <th>Offer</th>
+              <th>Sells for (FE)</th>
+              <th>Max stones (bought)</th>
+              <th>Max stones (farmed)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => {
+              const isCurrency = item.id === FLAME_ELEMENTIUM_ID
+              const unitPrice = isCurrency ? 1 : parsePrice(prices[item.id])
 
-            return item.quantities.map((quantity, index) => {
-              const value = unitPrice === null ? null : offerValue(item.id, quantity, unitPrice)
-              const stones =
-                value === null || stonePrice === null ? null : maxStoneCost(value, stonePrice, marginPercent)
+              return item.quantities.map((quantity, index) => {
+                const value = unitPrice === null ? null : offerValue(item.id, quantity, unitPrice)
+                const canCompute = value !== null && stonePrice !== null
+                const boughtStones = canCompute ? maxStoneCost(value, stonePrice, marginPercent) : null
+                const farmedStones = canCompute
+                  ? maxStoneCost(value, farmedStonePrice(stonePrice), marginPercent)
+                  : null
 
-              return (
-                <tr key={`${item.id}-${quantity}`} className={index === 0 ? 'item-start' : undefined}>
-                  {index === 0 && (
-                    <>
-                      <td rowSpan={item.quantities.length} className="item-name">
-                        {item.name}
-                      </td>
-                      <td rowSpan={item.quantities.length}>
-                        {isCurrency ? (
-                          <span className="muted">1 (currency)</span>
-                        ) : (
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            aria-label={`${item.name} price`}
-                            value={prices[item.id] ?? ''}
-                            onChange={(e) => setPrice(item.id, e.target.value)}
-                          />
-                        )}
-                      </td>
-                    </>
-                  )}
-                  <td>x{quantity}</td>
-                  <td>{value === null ? '—' : formatFe(value)}</td>
-                  <td className="result">
-                    {stones === null ? (
-                      <span className="muted">—</span>
-                    ) : stones < 1 ? (
-                      <span className="skip">Skip</span>
-                    ) : (
-                      <strong>{stones.toLocaleString()} stones</strong>
+                return (
+                  <tr key={`${item.id}-${quantity}`} className={index === 0 ? 'item-start' : undefined}>
+                    {index === 0 && (
+                      <>
+                        <td rowSpan={item.quantities.length} className="item-name">
+                          {item.name}
+                        </td>
+                        <td rowSpan={item.quantities.length}>
+                          {isCurrency ? (
+                            <span className="muted">1 (currency)</span>
+                          ) : (
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              aria-label={`${item.name} price`}
+                              value={prices[item.id] ?? ''}
+                              onChange={(e) => setPrice(item.id, e.target.value)}
+                            />
+                          )}
+                        </td>
+                      </>
                     )}
-                  </td>
-                </tr>
-              )
-            })
-          })}
-        </tbody>
-      </table>
+                    <td>x{quantity}</td>
+                    <td>{value === null ? '—' : formatFe(value)}</td>
+                    <td className="result">
+                      <StoneLimit stones={boughtStones} />
+                    </td>
+                    <td className="result">
+                      <StoneLimit stones={farmedStones} />
+                    </td>
+                  </tr>
+                )
+              })
+            })}
+          </tbody>
+        </table>
+      </div>
     </main>
   )
 }

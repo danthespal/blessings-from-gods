@@ -38,3 +38,22 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # The live site is replaced on every deploy; this removes the old deployment records.
+  cleanup:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    steps:
+      - name: Delete old github-pages deployments
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Newest first; skip the one just deployed. A deployment must be inactive before it can be deleted.
+          gh api "repos/$GITHUB_REPOSITORY/deployments?environment=github-pages&per_page=100" --jq '.[1:][].id' |
+            while read -r id; do
+              gh api -X POST "repos/$GITHUB_REPOSITORY/deployments/$id/statuses" -f state=inactive > /dev/null
+              gh api -X DELETE "repos/$GITHUB_REPOSITORY/deployments/$id"
+              echo "Deleted deployment $id"
+            done

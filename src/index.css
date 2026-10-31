@@ -74,6 +74,10 @@ input:focus {
   outline-offset: -1px;
 }
 
+.table-wrap {
+  overflow-x: auto;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
